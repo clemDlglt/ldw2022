@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guestbook</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <div>
+            <input type="text" name="username" id="username">
+            <textarea name="content" id="content" cols="30" rows="10"></textarea>
+            <button type="submit" id="submitBtn">Envoyer</button>
+        </div>
+        <ul id="commentsList">
+
+        </ul>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAVuDByx4T3k0O8ls4O-2Jzp-7JYzdHths",
+            authDomain: "guestbook-854b9.firebaseapp.com",
+            projectId: "guestbook-854b9",
+            storageBucket: "guestbook-854b9.appspot.com",
+            messagingSenderId: "743116257215",
+            appId: "1:743116257215:web:c49002169a1fd94484d30a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.addEventListener('click', async (event) => {
+            const username = document.getElementById('username');
+            const content = document.getElementById('content');
+            try {
+                const payload = {
+                    username: username.value,
+                    content: content.value,
+                }
+                const docRef = await addDoc(collection(db, "comments"), payload);
+                const newDoc = Object.assign({ id: docRef.id }, payload);
+                username.value = '';
+                content.value = '';
+                createLi(newDoc);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        })
+
+        async function getComments() {
+            const querySnapshot = await getDocs(collection(db, "comments"));
+
+            querySnapshot.forEach((doc) => {
+                const item = Object.assign({ id: doc.id }, doc.data())
+                console.log({ item });
+                createLi(item);
+            });
+        }
+
+        function createLi(data) {
+            const commentsList = document.getElementById('commentsList');
+            commentsList.innerHTML += `
+                <li>
+                    <span>${data.username}</span>
+                    <p>${data.content}</p>
+                </li>
+            `;
+        }
+
+        getComments();
+    </script>
+</body>
+
+</html>
